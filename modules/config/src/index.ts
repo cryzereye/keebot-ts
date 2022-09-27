@@ -1,10 +1,13 @@
 import express from 'express';
 
-const app = express();
+import { router } from './controller/ServerRoutes';
+import { ConfigRepository } from './repo/ConfigRepository';
 
-app.get('/', (req, res) => {
-    res.status(200).send('Config module');
-})
+const app = express();
+export const repo = new ConfigRepository();
+
+app.use(express.json());
+app.use('/', router);
 
 app.listen(3000, () => {
     console.log('Config module listening on port 3000!');
