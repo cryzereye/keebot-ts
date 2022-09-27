@@ -4,24 +4,25 @@ import { Channel } from '../types/Channel';
 import { Role } from '../types/Role';
 import { Filter } from '../types/Filter';
 import { ServerConfig } from '../interface/ServerConfig';
+import { ServerTransformer } from '../transformer/ServerTransformer';
 import { repo } from "../index";
 
 export class ServerValidator extends BaseValidator {
+    serverTF: ServerTransformer;
+
     constructor() {
         super();
+        this.serverTF = new ServerTransformer();
     }
 
     validateServer(data: ServerConfig): ValidationResponse {
-        if (!this.validID(data.serverID)) {
-            return {
-                status: 400,
-                content: `Invalid server ID provided: ${data.serverID}`
-            };
-        }
+        const validSID = this.validateServerID(data.serverID);
         const validCh = this.validateServerChannels(data.channels);
         const validR = this.validateServerRoles(data.roles);
         const validF = this.validateServerFilters(data.filters);
 
+        if (validSID.status === 400)
+            return validSID;
         if (validCh.status === 400)
             return validCh;
         if (validR.status === 400)
@@ -43,6 +44,35 @@ export class ServerValidator extends BaseValidator {
             status: 200,
             content: `Created server config for ${data.serverID}`
         };
+    }
+
+    async noValidate(): Promise<ValidationResponse> {
+        try {
+            return {
+                status: 200,
+                content: await this.serverTF.toResponse(await repo.getAllServerConfig())
+            };
+        }
+        catch (err) {
+            return {
+                status: 400,
+                content: "Database find error"
+            };
+        }
+    }
+
+    validateServerID(serverID: string): ValidationResponse {
+        if (!this.validID(serverID)) {
+            return {
+                status: 400,
+                content: `Invalid server ID provided: ${serverID}`
+            };
+        }
+
+        return {
+            status: 200,
+            content: `Valid serverID`
+        }
     }
 
     validateServerChannels(channels: Array<Channel>): ValidationResponse {

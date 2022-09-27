@@ -15,15 +15,41 @@ export class ConfigRepository {
      * adds a new set of server config. should be called upon bot join
      * @param { ServerConfig } data 
      */
-    addNewServerConfig(data: ServerConfig): void {
-        this.config.insertOne(
+    addNewServerConfig(data: ServerConfig): Object {
+        return this.config.findOneAndUpdate(
+            { serverID: data.serverID },
             {
-                serverID: data.serverID,
-                channels: data.channels,
-                roles: data.roles,
-                filter: data.filters
+                $set: {
+                    serverID: data.serverID,
+                    channels: data.channels,
+                    roles: data.roles,
+                    filter: data.filters
+                }
+            },
+            {
+                upsert: true
             }
         ).catch(console.error);
+    }
+
+    /**
+     * 
+     * @param {string} serverID 
+     * @returns {Object}
+     */
+    getServerConfig(serverID: string): Object {
+        return this.config.findOne(
+            { serverID: serverID }
+        );
+    }
+
+    /**
+     * 
+     * @param {string} serverID 
+     * @returns {Object}
+     */
+     async getAllServerConfig(): Promise<mongodb.FindCursor> {
+        return await this.config.find({});
     }
 
     async connectDB() {

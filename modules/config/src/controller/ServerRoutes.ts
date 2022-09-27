@@ -24,8 +24,14 @@ router.post('/server', (req, res) => {
     }
 });
 
-router.get('/server', (req, res) => {
-
+router.get('/server', async (req, res) => {
+    try{
+        const valres: ValidationResponse = await serverV.noValidate();
+        res.status(valres.status).send(valres.content);
+    }
+    catch(err){
+        res.status(500).send("Internal Server Error");
+    }
 });
 
 router.get('/server/:serverID', (req, res) => {
